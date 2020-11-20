@@ -13,5 +13,6 @@ public class Main {
         ten.one = one;
         one.a();
         one = null;
+        ten = null;
     }
 }

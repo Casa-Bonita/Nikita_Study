@@ -17,36 +17,56 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        try {
-            if (update.hasMessage() && update.getMessage().hasText()) {
-                Message inMessage = update.getMessage();
 
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            Message inMessage = update.getMessage();
+            String qrCodeText = inMessage.getText();
+
+            if(qrCodeText.equalsIgnoreCase("/start")){
                 SendMessage outMessage = new SendMessage();
                 outMessage.setChatId(inMessage.getChatId());
-
                 outMessage.setText("Привет! Этот бот поможет Вам создать QR-код Вашего сообщения!");
-                execute(outMessage);
-                outMessage.setText("Введите текст, который нужно закодировать:");
-                execute(outMessage);
-
-                if (!inMessage.getText().equals("") && !inMessage.getText().equals("/start")) {
-                    qrCodeText = update.getMessage().getText();
-
-                    outMessage.setText("Отлично! Сообщение \"" + qrCodeText + "\" будет преобразовано в QR код");
-                    StartCreateQRImage startCreateQRImage = new StartCreateQRImage();
-                    startCreateQRImage.getStart(qrCodeText);
+                SendMessage outMessage1 = new SendMessage();
+                outMessage1.setChatId(inMessage.getChatId());
+                outMessage1.setText("Введите текст, который нужно закодировать:");
+                try{
                     execute(outMessage);
-
-                    SendPhoto sendPhoto = new SendPhoto().setPhoto("QR-code", new FileInputStream(new File("src/main/java/ru/study/homework/homework2/MyQRCode.png"))).setChatId(inMessage.getChatId());
-                    execute(sendPhoto);
-
-                } else {
-                    outMessage.setText("Я Вас не понял");
+                    execute(outMessage1);
+                }catch(TelegramApiException ex){
+                    ex.printStackTrace();
                 }
             }
+            else if(qrCodeText.length() > 0){
+                SendMessage outMessage = new SendMessage();
+                outMessage.setChatId(inMessage.getChatId());
+                outMessage.setText("Отлично! Сообщение \"" + qrCodeText + "\" будет преобразовано в QR код");
+                StartCreateQRImage startCreateQRImage = new StartCreateQRImage();
+                startCreateQRImage.getStart(qrCodeText);
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
+                try{
+                    execute(outMessage);
+                }catch(TelegramApiException ex){
+                    ex.printStackTrace();
+                }
+
+                SendPhoto sendPhoto = null;
+                try{
+                    sendPhoto = new SendPhoto().setPhoto("QR-code", new FileInputStream(new File("src/main/java/ru/study/homework/homework2/MyQRCode.png"))).setChatId(inMessage.getChatId());
+                }catch(IOException ex){
+                    ex.printStackTrace();
+                }
+
+                try{
+                    execute(sendPhoto);
+                }catch(TelegramApiException ex){
+                    ex.printStackTrace();
+                }
+
+            } else {
+                SendMessage outMessage = new SendMessage();
+                outMessage.setChatId(inMessage.getChatId());
+                outMessage.setText("Я Вас не понял");
+            }
         }
     }
 
